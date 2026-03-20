@@ -62,18 +62,15 @@ func (o *OFT) CommitRule(block *hotstuff.Block) *hotstuff.Block {
 }
 
 // VoteRule decides whether to vote for the proposal.
-// OFT has no locking mechanism; replicas vote for any valid proposal
-// whose QC references a known block.
+// Per the OFT spec, replicas vote for any valid proposal in the current view
+// (view/leader checks are handled by the framework). The parent check is only
+// used in CommitRule to decide whether to commit, not to gate voting.
+// This ensures liveness: after view changes with gaps, replicas still vote.
 func (o *OFT) VoteRule(_ hotstuff.View, proposal hotstuff.ProposeMsg) bool {
 	block := proposal.Block
-	qcBlock, ok := o.qcRef(block.QuorumCert())
+	_, ok := o.qcRef(block.QuorumCert())
 	if !ok {
 		o.logger.Debug("VoteRule: QC block not found")
-		return false
-	}
-	// vote if the block extends the QC-referenced block
-	if block.Parent() != qcBlock.Hash() {
-		o.logger.Debug("VoteRule: block does not extend QC block")
 		return false
 	}
 	return true
