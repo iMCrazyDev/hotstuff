@@ -25,6 +25,8 @@ func New(
 		ruleset = NewFastHotStuff(logger, config, blockchain)
 	case NameSimpleHotStuff:
 		ruleset = NewSimpleHotStuff(logger, config, blockchain)
+	case NameOFT:
+		ruleset = NewOFT(logger, config, blockchain)
 	default:
 		return nil, fmt.Errorf("invalid consensus name: '%s'", name)
 	}
