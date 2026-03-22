@@ -42,6 +42,13 @@ type Synchronizer struct {
 
 	// bag of collected timeout messages for different views
 	timeouts *timeoutCollector
+
+	// OFT-specific: tracks whether the leader is waiting for a quorum of network
+	// NewViewMsgs before proposing (set after a force-advance on timeout).
+	oftWaitingForNewViewQuorum bool
+	// OFT-specific: count of network NewViewMsgs received in the current view
+	// while waiting for quorum. Pre-seeded with 1 to count the leader itself.
+	oftNewViewCount int
 }
 
 // New creates a new Synchronizer.
@@ -183,6 +190,37 @@ func (s *Synchronizer) OnLocalTimeout() {
 	s.logger.Debug("OnLocalTimeout")
 	s.startTimeoutTimer()
 	currentView := s.state.View()
+
+	if s.config.IsOFT() {
+		// OFT timeout path: no TimeoutMsg is sent. All replicas force-advance their view
+		// locally. The leader waits for f+1 network NewViewMsgs before proposing.
+		s.duration.ViewTimeout()
+		s.logger.Debugf("OFT OnLocalTimeout: force-advancing from view %v", currentView)
+		if s.voter.StopVoting(currentView) {
+			s.logger.Debugf("Stopped voting for timed out view %d", currentView)
+		}
+		// If the leader is already waiting for a NewViewMsg quorum and the timer fires
+		// again, it means the network is too slow for the current duration. Rather than
+		// cascading into the next view (which would miss any in-flight NewViewMsgs),
+		// the leader proposes immediately with its current HighQC. This ensures liveness
+		// even when round-trip time exceeds the adapted view duration.
+		if s.oftWaitingForNewViewQuorum &&
+			s.leaderRotation.GetLeader(currentView) == s.config.ID() {
+			s.logger.Debugf("OFT OnLocalTimeout: leader timed out while waiting for NewViewMsg quorum, proposing with HighQC")
+			s.oftWaitingForNewViewQuorum = false
+			s.oftNewViewCount = 0
+			proposal, err := s.proposer.CreateProposal(s.state.SyncInfo())
+			if err != nil {
+				s.logger.Debugf("OFT OnLocalTimeout: failed to create proposal: %v", err)
+			} else if err := s.proposer.Propose(&proposal); err != nil {
+				s.logger.Info(err)
+			}
+			return
+		}
+		s.forceAdvanceView(currentView)
+		return
+	}
+
 	if s.lastTimeout != nil && s.lastTimeout.View == currentView {
 		s.sender.Timeout(*s.lastTimeout)
 		return
@@ -203,6 +241,38 @@ func (s *Synchronizer) OnLocalTimeout() {
 
 	s.sender.Timeout(*timeoutMsg)
 	s.OnRemoteTimeout(*timeoutMsg)
+}
+
+// forceAdvanceView advances the view without requiring a quorum certificate.
+// Used by OFT on timeout: all replicas advance locally; the leader then waits
+// for f+1 network NewViewMsgs before proposing.
+func (s *Synchronizer) forceAdvanceView(view hotstuff.View) {
+	if view < s.state.View() {
+		return
+	}
+	s.stopTimeoutTimer()
+
+	newView := s.state.NextView()
+	s.oftWaitingForNewViewQuorum = false
+	s.oftNewViewCount = 0
+	s.lastTimeout = nil
+	s.duration.ViewStarted()
+	s.startTimeoutTimer()
+
+	s.logger.Debugf("forceAdvanceView: advanced to view %d", newView)
+	s.eventLoop.AddEvent(hotstuff.ViewChangeEvent{View: newView, Timeout: true})
+
+	leader := s.leaderRotation.GetLeader(newView)
+	if leader == s.config.ID() {
+		// Leader waits for f+1 network NewViewMsgs (counting itself as 1).
+		s.oftWaitingForNewViewQuorum = true
+		s.oftNewViewCount = 1
+		s.logger.Debugf("forceAdvanceView: leader of view %d, waiting for NewViewMsg quorum", newView)
+		return
+	}
+	if err := s.sender.NewView(leader, s.state.SyncInfo()); err != nil {
+		s.logger.Warnf("forceAdvanceView: error sending NewView: %v", err)
+	}
 }
 
 // OnRemoteTimeout handles an incoming timeout from a remote replica.
@@ -243,6 +313,31 @@ func (s *Synchronizer) OnNewView(newView hotstuff.NewViewMsg) {
 		s.logger.Debugf("new view msg from: %d", newView.ID)
 	}
 	s.advanceView(newView.SyncInfo)
+
+	// OFT timeout path: the leader waits for f+1 network NewViewMsgs before proposing.
+	// advanceView always updates HighQC (even when view doesn't advance), so after
+	// counting f+1 msgs, s.state.SyncInfo() already holds the globally highest HighQC.
+	if !s.config.IsOFT() || !newView.FromNetwork || !s.oftWaitingForNewViewQuorum {
+		return
+	}
+	if s.leaderRotation.GetLeader(s.state.View()) != s.config.ID() {
+		return
+	}
+	s.oftNewViewCount++
+	s.logger.Debugf("OFT OnNewView: collected %d/%d NewViewMsgs", s.oftNewViewCount, s.config.QuorumSize())
+	if s.oftNewViewCount < s.config.QuorumSize() {
+		return
+	}
+	s.oftWaitingForNewViewQuorum = false
+	s.oftNewViewCount = 0
+	proposal, err := s.proposer.CreateProposal(s.state.SyncInfo())
+	if err != nil {
+		s.logger.Debugf("OFT OnNewView: failed to create proposal: %v", err)
+		return
+	}
+	if err := s.proposer.Propose(&proposal); err != nil {
+		s.logger.Info(err)
+	}
 }
 
 // advanceView attempts to advance to the next view using the given QC.
@@ -283,6 +378,8 @@ func (s *Synchronizer) advanceView(syncInfo hotstuff.SyncInfo) {
 	newView := s.state.NextView()
 
 	s.lastTimeout = nil
+	s.oftWaitingForNewViewQuorum = false
+	s.oftNewViewCount = 0
 	s.duration.ViewStarted()
 
 	s.startTimeoutTimer()

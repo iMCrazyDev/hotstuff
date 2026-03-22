@@ -50,6 +50,19 @@ func (c *Authority) CreatePartialCert(block *hotstuff.Block) (cert hotstuff.Part
 	return hotstuff.NewPartialCert(sig, block.Hash()), nil
 }
 
+// CreateLeaderQuorumCert creates a QC signed only by the leader itself.
+// Used in OFT mode: the leader self-signs after collecting f+1 votes, rather than combining all signatures.
+func (c *Authority) CreateLeaderQuorumCert(block *hotstuff.Block) (cert hotstuff.QuorumCert, err error) {
+	if block.Hash() == hotstuff.GetGenesis().Hash() {
+		return hotstuff.NewQuorumCert(nil, 0, hotstuff.GetGenesis().Hash()), nil
+	}
+	sig, err := c.Sign(block.ToBytes())
+	if err != nil {
+		return hotstuff.QuorumCert{}, fmt.Errorf("OFT: leader failed to sign block: %w", err)
+	}
+	return hotstuff.NewQuorumCert(sig, block.View(), block.Hash()), nil
+}
+
 // CreateQuorumCert creates a quorum certificate from a list of partial certificates.
 func (c *Authority) CreateQuorumCert(block *hotstuff.Block, signatures []hotstuff.PartialCert) (cert hotstuff.QuorumCert, err error) {
 	// genesis QC is always valid.
@@ -126,9 +139,9 @@ func (c *Authority) VerifyQuorumCert(qc hotstuff.QuorumCert) error {
 	}
 
 	participants := qcSignature.Participants()
-	quorumSize := c.config.QuorumSize()
-	if participants.Len() < quorumSize {
-		return fmt.Errorf("%d participants cannot satisfy the quorum requirement: %d", participants.Len(), quorumSize)
+	minParticipants := c.config.QCMinParticipants()
+	if participants.Len() < minParticipants {
+		return fmt.Errorf("%d participants cannot satisfy the quorum requirement: %d", participants.Len(), minParticipants)
 	}
 	block, ok := c.blockchain.Get(qc.BlockHash())
 	if !ok {

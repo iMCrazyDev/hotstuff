@@ -37,6 +37,15 @@ func WithAggregateQC() RuntimeOption {
 	}
 }
 
+// WithOFT enables OFT (Omission Fault Tolerant) mode.
+// OFT uses a omission-fault-tolerant model with N=2f+1, a quorum of f+1 votes,
+// and a single-signature QC from the leader.
+func WithOFT() RuntimeOption {
+	return func(g *RuntimeConfig) {
+		g.oftMode = true
+	}
+}
+
 // WithCache specifies the cache size for crypto operations. This option causes
 // the Crypto implementation to be wrapped in a caching layer that caches the
 // results of recent crypto operations, avoiding repeated computations.

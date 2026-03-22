@@ -13,6 +13,7 @@ type RuntimeConfig struct {
 
 	aggQC                bool
 	syncVoteVerification bool
+	oftMode              bool
 
 	connectionMetadata map[string]string
 	replicas           map[hotstuff.ID]*hotstuff.ReplicaInfo
@@ -55,6 +56,21 @@ func (g *RuntimeConfig) PrivateKey() hotstuff.PrivateKey {
 // This is true for Fast-HotStuff: https://arxiv.org/abs/2010.11454
 func (g *RuntimeConfig) HasAggregateQC() bool {
 	return g.aggQC
+}
+
+// IsOFT returns true if the OFT (Optimistic Fast Track) protocol mode is active.
+// OFT uses a crash-fault-tolerant model with N=2f+1 and a smaller quorum of f+1.
+func (g *RuntimeConfig) IsOFT() bool {
+	return g.oftMode
+}
+
+// QCMinParticipants returns the minimum number of participants required in a valid QC.
+// For OFT, this is 1 (only the leader's signature). For other protocols, it equals QuorumSize.
+func (g *RuntimeConfig) QCMinParticipants() int {
+	if g.oftMode {
+		return 1
+	}
+	return g.QuorumSize()
 }
 
 // SyncVerification returns true if votes should be verified synchronously.
