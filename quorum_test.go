@@ -5,6 +5,31 @@ import (
 	"testing"
 )
 
+func TestOFTQuorumSize(t *testing.T) {
+	tests := []struct {
+		n        int
+		wantF    int
+		wantSize int
+	}{
+		{n: 1, wantF: 0, wantSize: 1}, // degenerate: 1 node
+		{n: 3, wantF: 1, wantSize: 2}, // f=1: need 2
+		{n: 5, wantF: 2, wantSize: 3}, // f=2: need 3
+		{n: 7, wantF: 3, wantSize: 4}, // f=3: need 4
+		{n: 9, wantF: 4, wantSize: 5},
+		{n: 11, wantF: 5, wantSize: 6},
+	}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("n=%d", tt.n), func(t *testing.T) {
+			if gotF := OFTNumFaulty(tt.n); gotF != tt.wantF {
+				t.Errorf("OFTNumFaulty(%d) = %d; want %d", tt.n, gotF, tt.wantF)
+			}
+			if gotSize := OFTQuorumSize(tt.n); gotSize != tt.wantSize {
+				t.Errorf("OFTQuorumSize(%d) = %d; want %d", tt.n, gotSize, tt.wantSize)
+			}
+		})
+	}
+}
+
 func TestQuorumSize(t *testing.T) {
 	tests := []struct {
 		n    int

@@ -12,3 +12,14 @@ func QuorumSize(n int) int {
 	f := NumFaulty(n)
 	return int(math.Ceil(float64(n+f+1) / 2.0))
 }
+
+// OFTNumFaulty returns the maximum number of crash-faulty replicas in an OFT system with n replicas.
+// OFT uses a crash-fault-tolerant model where N = 2f+1.
+func OFTNumFaulty(n int) int {
+	return (n - 1) / 2
+}
+
+// OFTQuorumSize returns the quorum size for OFT: f+1 where N = 2f+1.
+func OFTQuorumSize(n int) int {
+	return OFTNumFaulty(n) + 1
+}
