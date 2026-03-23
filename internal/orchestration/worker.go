@@ -153,6 +153,10 @@ func (w *Worker) createReplica(opts *orchestrationpb.ReplicaOpts) (*replica.Repl
 		// Use aggregated quorum certificates for Fast-HotStuff: https://arxiv.org/abs/2010.11454
 		runtimeOpts = append(runtimeOpts, core.WithAggregateQC())
 	}
+	if opts.GetConsensus() == rules.NameOFT {
+		// OFT uses crash-fault-tolerant quorum (f+1) and single-leader-signature QCs.
+		runtimeOpts = append(runtimeOpts, core.WithOFT())
+	}
 	runtimeOpts = append(runtimeOpts, core.WithSharedRandomSeed(opts.GetSharedSeed()))
 	depsCore := wiring.NewCore(opts.HotstuffID(), "hs", privKey, runtimeOpts...)
 	// check if measurements should be enabled

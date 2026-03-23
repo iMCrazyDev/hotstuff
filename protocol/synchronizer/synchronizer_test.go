@@ -3,7 +3,7 @@ package synchronizer
 import (
 	"testing"
 
-	"cuelang.org/go/pkg/time"
+	cuelangtime "cuelang.org/go/pkg/time"
 	"github.com/relab/hotstuff"
 
 	"github.com/relab/hotstuff/core"
@@ -63,7 +63,7 @@ func wireUpSynchronizer(
 		essentials.RuntimeCfg(),
 		essentials.Authority(),
 		leaderRotation,
-		NewFixedDuration(1000*time.Nanosecond),
+		NewFixedDuration(1000*cuelangtime.Nanosecond),
 		NewTimeoutRuler(essentials.RuntimeCfg(), essentials.Authority()),
 		depsConsensus.Proposer(),
 		depsConsensus.Voter(),
@@ -186,7 +186,7 @@ func TestAdvanceView(t *testing.T) {
 		{name: "signers=4/Aggregate/__/__/AC", tr: A, qc: F, tc: F, ac: T, firstSignerIdx: 0, wantView: 2},
 		{name: "signers=4/Aggregate/__/TC/__", tr: A, qc: F, tc: T, ac: F, firstSignerIdx: 0, wantView: 2},
 		{name: "signers=4/Aggregate/__/TC/AC", tr: A, qc: F, tc: T, ac: T, firstSignerIdx: 0, wantView: 2},
-		{name: "signers=4/Aggregate/QC/__/__", tr: A, qc: T, tc: F, ac: F, firstSignerIdx: 0, wantView: 1}, // aggregate timeout rule ignores quorum cert, will not advance view
+		{name: "signers=4/Aggregate/QC/__/__", tr: A, qc: T, tc: F, ac: F, firstSignerIdx: 0, wantView: 2}, // falls back to plain QC when no AggQC present
 		{name: "signers=4/Aggregate/QC/__/AC", tr: A, qc: T, tc: F, ac: T, firstSignerIdx: 0, wantView: 2},
 		{name: "signers=4/Aggregate/QC/TC/AC", tr: A, qc: T, tc: T, ac: T, firstSignerIdx: 0, wantView: 2},
 		// three signers; quorum reacted, advance view
@@ -201,7 +201,7 @@ func TestAdvanceView(t *testing.T) {
 		{name: "signers=3/Aggregate/__/__/AC", tr: A, qc: F, tc: F, ac: T, firstSignerIdx: 1, wantView: 2},
 		{name: "signers=3/Aggregate/__/TC/__", tr: A, qc: F, tc: T, ac: F, firstSignerIdx: 1, wantView: 2},
 		{name: "signers=3/Aggregate/__/TC/AC", tr: A, qc: F, tc: T, ac: T, firstSignerIdx: 1, wantView: 2},
-		{name: "signers=3/Aggregate/QC/__/__", tr: A, qc: T, tc: F, ac: F, firstSignerIdx: 1, wantView: 1}, // aggregate timeout rule ignores quorum cert, will not advance view
+		{name: "signers=3/Aggregate/QC/__/__", tr: A, qc: T, tc: F, ac: F, firstSignerIdx: 1, wantView: 2}, // falls back to plain QC when no AggQC present
 		{name: "signers=3/Aggregate/QC/__/AC", tr: A, qc: T, tc: F, ac: T, firstSignerIdx: 1, wantView: 2},
 		{name: "signers=3/Aggregate/QC/TC/AC", tr: A, qc: T, tc: T, ac: T, firstSignerIdx: 1, wantView: 2},
 		// only two signers; no quorum reached, should not advance view
@@ -251,6 +251,85 @@ func TestAdvanceView(t *testing.T) {
 			}
 			// t.Logf("A %s: HighQC.View: %d, HighTC.View: %d", tt.name, viewStates.HighQC().View(), viewStates.HighTC().View())
 		})
+	}
+}
+
+// wireUpOFTSynchronizer wires up a 3-replica (N=2f+1, f=1) OFT synchronizer for testing.
+// The subject is always replica 1, which is also the fixed leader.
+func wireUpOFTSynchronizer(t *testing.T) (testutil.EssentialsSet, *protocol.ViewStates, *Synchronizer, *clientpb.CommandCache) {
+	t.Helper()
+	set := testutil.NewEssentialsSet(t, 3, crypto.NameECDSA, core.WithOFT())
+	subject := set[0]
+	viewStates, err := protocol.NewViewStates(subject.Blockchain(), subject.Authority())
+	if err != nil {
+		t.Fatal(err)
+	}
+	commandCache := clientpb.NewCommandCache(2)
+	for i := range 2 {
+		commandCache.Add(&clientpb.Command{ClientID: 1, SequenceNumber: uint64(i + 1), Data: []byte("cmd")})
+	}
+	sync, _ := wireUpSynchronizer(t, subject, commandCache, viewStates)
+	return set, viewStates, sync, commandCache
+}
+
+// TestForceAdvanceViewOFT verifies that OnLocalTimeout in OFT mode does NOT send a
+// TimeoutMsg and advances the view immediately via forceAdvanceView.
+func TestForceAdvanceViewOFT(t *testing.T) {
+	_, viewStates, sync, _ := wireUpOFTSynchronizer(t)
+
+	if viewStates.View() != 1 {
+		t.Fatalf("expected initial view 1, got %d", viewStates.View())
+	}
+
+	// Simulate a local timeout — in OFT mode this should force-advance the view.
+	sync.forceAdvanceView(1)
+
+	if viewStates.View() != 2 {
+		t.Errorf("after forceAdvanceView: view = %d, want 2", viewStates.View())
+	}
+}
+
+// TestOFTLeaderWaitsForNewViewQuorum verifies that the OFT leader (replica 1 in view 2)
+// waits for f+1 network NewViewMsgs before proposing, and proposes as soon as quorum is reached.
+// The check is done synchronously (no event loop run) to avoid the short-duration timer in
+// wireUpSynchronizer triggering another force-advance and resetting OFT state.
+func TestOFTLeaderWaitsForNewViewQuorum(t *testing.T) {
+	set, viewStates, sync, _ := wireUpOFTSynchronizer(t)
+
+	// Force-advance to view 2 — the leader sets oftWaitingForNewViewQuorum=true
+	// and pre-seeds the count with 1 (counts itself).
+	sync.forceAdvanceView(1)
+
+	if viewStates.View() != 2 {
+		t.Fatalf("expected view 2 after forceAdvanceView, got %d", viewStates.View())
+	}
+	if !sync.oftWaitingForNewViewQuorum {
+		t.Fatal("expected leader to be waiting for NewViewMsg quorum after force-advance")
+	}
+
+	// QuorumSize = (3+1)/2 = 2. Leader pre-seeded count=1, so 1 more network msg triggers proposal.
+	replica2ID := set[1].RuntimeCfg().ID()
+	sync.OnNewView(hotstuff.NewViewMsg{
+		ID:          replica2ID,
+		SyncInfo:    viewStates.SyncInfo(),
+		FromNetwork: true,
+	})
+
+	// OnNewView is synchronous. After it returns, OFT state must be cleared.
+	if sync.oftWaitingForNewViewQuorum {
+		t.Error("expected oftWaitingForNewViewQuorum to be cleared after quorum of NewViewMsgs")
+	}
+
+	// The leader must have sent a proposal via the mock sender.
+	var proposalSent bool
+	for _, msg := range set[0].MockSender().MessagesSent() {
+		if _, ok := msg.(hotstuff.ProposeMsg); ok {
+			proposalSent = true
+			break
+		}
+	}
+	if !proposalSent {
+		t.Error("expected leader to send a proposal after receiving f+1 NewViewMsgs")
 	}
 }
 

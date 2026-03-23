@@ -152,8 +152,9 @@ func (impl *serviceImpl) NewView(ctx gorums.ServerCtx, msg *hotstuffpb.SyncInfo)
 	}
 	impl.srv.addNetworkDelay(id)
 	impl.srv.eventLoop.AddEvent(hotstuff.NewViewMsg{
-		ID:       id,
-		SyncInfo: hotstuffpb.SyncInfoFromProto(msg),
+		ID:          id,
+		SyncInfo:    hotstuffpb.SyncInfoFromProto(msg),
+		FromNetwork: true,
 	})
 }
 

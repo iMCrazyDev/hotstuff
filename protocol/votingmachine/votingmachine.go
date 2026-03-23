@@ -120,7 +120,14 @@ func (vm *VotingMachine) verifyCert(cert hotstuff.PartialCert, block *hotstuff.B
 	if len(votes) < vm.config.QuorumSize() {
 		return
 	}
-	qc, err := vm.auth.CreateQuorumCert(block, votes)
+	var qc hotstuff.QuorumCert
+	var err error
+	if vm.config.IsOFT() {
+		// OFT: leader self-signs to create a single-signature QC after collecting f+1 votes.
+		qc, err = vm.auth.CreateLeaderQuorumCert(block)
+	} else {
+		qc, err = vm.auth.CreateQuorumCert(block, votes)
+	}
 	if err != nil {
 		vm.logger.Infof("CollectVote: could not create QC for block: %v", err)
 		return

@@ -18,7 +18,11 @@ func (g *RuntimeConfig) ReplicaCount() int {
 }
 
 // QuorumSize returns the size of a quorum.
+// For OFT mode, returns f+1 where N=2f+1. For other protocols, returns the standard BFT quorum.
 func (g *RuntimeConfig) QuorumSize() int {
+	if g.oftMode {
+		return hotstuff.OFTQuorumSize(g.ReplicaCount())
+	}
 	return hotstuff.QuorumSize(g.ReplicaCount())
 }
 
