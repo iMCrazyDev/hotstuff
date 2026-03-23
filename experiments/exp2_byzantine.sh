@@ -1,6 +1,6 @@
 #!/bin/bash
 # Experiment 2: Block finalization time vs N with Byzantine nodes (FastHotStuff only)
-# f = floor((N-1)/3) faulty nodes use "silentproposer" strategy
+# f = floor((N-1)/3) faulty nodes use "fork" strategy (propose block with stale QC)
 # Uses CUE configs to assign byzantine strategy to specific replica IDs
 
 set -e
@@ -33,8 +33,8 @@ for N in 4 7 10 13 16; do
         fi
     done
 
-    # scale duration by N (need longer with timeouts from silent leaders)
-    # use default 500ms view-timeout so silent leader views resolve quickly
+    # scale duration by N (need longer with timeouts from fork leaders)
+    # use default 500ms view-timeout so invalid proposals resolve quickly
     if [ $N -le 7 ]; then
         DURATION="30s"
     elif [ $N -le 10 ]; then
@@ -63,7 +63,7 @@ config: {
     crypto:       "ecdsa"
     leaderRotation: "round-robin"
     communication:  "clique"
-    byzantineStrategy: {silentproposer: [$BYZ_IDS]}
+    byzantineStrategy: {fork: [$BYZ_IDS]}
 }
 CUEEOF
 
@@ -155,7 +155,7 @@ for N in [4, 7, 10, 13, 16]:
 summary = {
     'experiment': 'exp2_byzantine_finalization_time_vs_N',
     'consensus': '$CONSENSUS',
-    'byzantine_strategy': 'silentproposer',
+    'byzantine_strategy': 'fork',
     'batch_size': $BATCH_SIZE,
     'clients': $CLIENTS,
     'max_concurrent': $MAX_CONCURRENT,
