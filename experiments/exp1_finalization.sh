@@ -1,144 +1,124 @@
 #!/bin/bash
-# Experiment 1: Block finalization time vs number of participants N
-# Compares OFT (1-chain, f+1 quorum) vs FastHotStuff (2-chain, 2f+1 quorum)
-# For each N, collects K = N * 100 blocks
+# Experiment 1: Block finalization time vs N
+# OFT vs FastHotStuff, multiple runs per N for averaging
 
 set -e
 
 BINARY="./hotstuff"
 OUTDIR="experiments/results/exp1"
 BATCH_SIZE=1
-MAX_CONCURRENT=50
-CLIENTS=2
+MAX_CONCURRENT=100
+CLIENTS=4
 MEASUREMENT_INTERVAL="1s"
+RUNS=3
 
 mkdir -p "$OUTDIR"
 
 echo "============================================="
 echo "  Experiment 1: Finalization Time vs N"
-echo "  OFT vs FastHotStuff"
+echo "  OFT vs FastHotStuff ($RUNS runs each)"
+echo "  View timeout: $VIEW_TIMEOUT (fixed)"
 echo "============================================="
 
 for CONSENSUS in oft fasthotstuff; do
     echo ""
-    echo "============================================="
-    echo "  Protocol: $CONSENSUS"
-    echo "============================================="
+    echo "=== Protocol: $CONSENSUS ==="
 
-    for N in 4 7 10 13 16; do
-        K=$((N * 100))
-
-        # scale duration by N
-        if [ $N -le 7 ]; then
-            DURATION="10s"
-            VIEW_TIMEOUT="5s"
-        elif [ $N -le 10 ]; then
-            DURATION="20s"
-            VIEW_TIMEOUT="5s"
-        else
+    for N in $(seq 5 5 50); do
+        if [ $N -le 10 ]; then
             DURATION="30s"
-            VIEW_TIMEOUT="5s"
+        elif [ $N -le 20 ]; then
+            DURATION="60s"
+        elif [ $N -le 35 ]; then
+            DURATION="90s"
+        else
+            DURATION="120s"
         fi
 
-        RUN_DIR="$OUTDIR/${CONSENSUS}/N${N}"
-        rm -rf "$RUN_DIR"
+        for R in $(seq 1 $RUNS); do
+            RUN_DIR="$OUTDIR/${CONSENSUS}/N${N}/run${R}"
+            rm -rf "$RUN_DIR"
+            echo "--- $CONSENSUS N=$N run=$R/$RUNS duration=$DURATION ---"
 
-        echo ""
-        echo "--- $CONSENSUS N=$N (need K=$K blocks, duration=$DURATION) ---"
-
-        $BINARY run \
-            --consensus "$CONSENSUS" \
-            --replicas "$N" \
-            --clients "$CLIENTS" \
-            --max-concurrent "$MAX_CONCURRENT" \
-            --batch-size "$BATCH_SIZE" \
-            --duration "$DURATION" \
-            --view-timeout "$VIEW_TIMEOUT" \
-            --fixed-timeout "$VIEW_TIMEOUT" \
-            --log-level info \
-            --metrics consensus-latency,throughput \
-            --measurement-interval "$MEASUREMENT_INTERVAL" \
-            --output "$RUN_DIR" \
-            2>&1 | grep -E "Done sending|Stopping"
-
-        echo "  Output: $RUN_DIR"
+            $BINARY run \
+                --consensus "$CONSENSUS" \
+                --replicas "$N" \
+                --clients "$CLIENTS" \
+                --max-concurrent "$MAX_CONCURRENT" \
+                --batch-size "$BATCH_SIZE" \
+                --duration "$DURATION" \
+                --view-timeout "$VIEW_TIMEOUT" \
+                --fixed-timeout "$VIEW_TIMEOUT" \
+                --log-level info \
+                --metrics consensus-latency,throughput \
+                --measurement-interval "$MEASUREMENT_INTERVAL" \
+                --output "$RUN_DIR" \
+                2>&1 | tail -3
+        done
     done
 done
 
 echo ""
-echo "============================================="
-echo "  Aggregating results to JSON..."
-echo "============================================="
-
-SUMMARY="$OUTDIR/summary.json"
+echo "=== Aggregating ==="
 
 python3 -c "
-import json, math, os
+import json, math, os, statistics
 
+RUNS = $RUNS
 all_results = {}
 
 for consensus in ['oft', 'fasthotstuff']:
     results = []
-    for N in [4, 7, 10, 13, 16]:
-        K = N * 100
-        json_path = os.path.join('$OUTDIR', consensus, f'N{N}', 'local', 'measurements.json')
-        if not os.path.exists(json_path):
+    for N in list(range(5, 51, 5)):
+        run_lats = []
+        run_thrs = []
+        for r in range(1, RUNS + 1):
+            path = os.path.join('$OUTDIR', consensus, f'N{N}', f'run{r}', 'local', 'measurements.json')
+            if not os.path.exists(path):
+                continue
+            with open(path) as f:
+                data = json.load(f)
+
+            total_lat = 0.0
+            total_count = 0
+            total_commits = 0
+            total_duration = 0.0
+
+            for entry in data:
+                t = entry.get('@type', '')
+                if t == 'type.googleapis.com/types.LatencyMeasurement':
+                    count = int(entry.get('Count', '0'))
+                    lat = float(entry.get('Latency', 0))
+                    if count > 0:
+                        total_lat += lat * count
+                        total_count += count
+                elif t == 'type.googleapis.com/types.ThroughputMeasurement':
+                    commits = int(entry.get('Commits', '0'))
+                    dur = entry.get('Duration', '0s')
+                    if isinstance(dur, str) and dur.endswith('s'):
+                        total_commits += commits
+                        total_duration += float(dur[:-1])
+
+            if total_count > 0:
+                run_lats.append(total_lat / total_count)
+            if total_duration > 0:
+                run_thrs.append(total_commits / total_duration)
+
+        if not run_lats:
             continue
 
-        with open(json_path) as f:
-            data = json.load(f)
-
-        total_lat = 0.0
-        total_var = 0.0
-        total_count = 0
-        total_commits = 0
-        total_duration = 0.0
-
-        for entry in data:
-            t = entry.get('@type', '')
-            if t == 'type.googleapis.com/types.LatencyMeasurement':
-                count = int(entry.get('Count', '0'))
-                lat = float(entry.get('Latency', 0))
-                v = entry.get('Variance', 0)
-                if isinstance(v, str) and v == 'NaN':
-                    continue
-                v = float(v)
-                if count > 0:
-                    total_lat += lat * count
-                    total_var += v * count
-                    total_count += count
-            elif t == 'type.googleapis.com/types.ThroughputMeasurement':
-                commits = int(entry.get('Commits', '0'))
-                dur = entry.get('Duration', '0s')
-                # parse duration like '1.000131292s'
-                if isinstance(dur, str) and dur.endswith('s'):
-                    total_commits += commits
-                    total_duration += float(dur[:-1])
-
-        if total_count > 0:
-            avg_lat = total_lat / total_count
-            avg_var = total_var / total_count
-            std_dev = math.sqrt(avg_var)
-            unique_blocks = total_count // N
-        else:
-            avg_lat = None
-            std_dev = None
-            unique_blocks = 0
-
-        # throughput: average across all replicas
-        if total_duration > 0:
-            avg_throughput = total_commits / total_duration
-        else:
-            avg_throughput = None
+        avg_lat = statistics.mean(run_lats)
+        std_lat = statistics.stdev(run_lats) if len(run_lats) > 1 else 0.0
+        avg_thr = statistics.mean(run_thrs) if run_thrs else None
+        std_thr = statistics.stdev(run_thrs) if len(run_thrs) > 1 else 0.0
 
         results.append({
             'N': N,
-            'target_K': K,
-            'avg_latency_ms': round(avg_lat, 4) if avg_lat else None,
-            'std_dev_ms': round(std_dev, 4) if std_dev else None,
-            'unique_blocks': unique_blocks,
-            'total_samples': total_count,
-            'avg_throughput_bps': round(avg_throughput, 2) if avg_throughput else None,
+            'runs': len(run_lats),
+            'avg_latency_ms': round(avg_lat, 4),
+            'std_dev_ms': round(std_lat, 4),
+            'avg_throughput_bps': round(avg_thr, 2) if avg_thr else None,
+            'std_throughput_bps': round(std_thr, 2),
         })
 
     all_results[consensus] = results
@@ -146,18 +126,18 @@ for consensus in ['oft', 'fasthotstuff']:
 summary = {
     'experiment': 'exp1_finalization_time_vs_N',
     'protocols': ['oft', 'fasthotstuff'],
+    'runs_per_config': RUNS,
+    'view_timeout': '$VIEW_TIMEOUT',
     'batch_size': $BATCH_SIZE,
     'clients': $CLIENTS,
     'max_concurrent': $MAX_CONCURRENT,
     'results': all_results,
 }
 
-with open('$SUMMARY', 'w') as f:
+with open('$OUTDIR/summary.json', 'w') as f:
     json.dump(summary, f, indent=2)
 
 print(json.dumps(summary, indent=2))
 "
 
-echo ""
-echo "Done! Summary: $SUMMARY"
-echo "Raw data: $OUTDIR/{oft,fasthotstuff}/N*/local/measurements.json"
+echo "Done! Summary: $OUTDIR/summary.json"
