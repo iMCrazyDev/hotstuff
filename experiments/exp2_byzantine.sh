@@ -1,6 +1,7 @@
 #!/bin/bash
 # Experiment 2: Block finalization time vs N with Byzantine fork-attackers
 # FastHotStuff only, f = floor((N-1)/3) faulty nodes, multiple runs
+# Skips already completed runs (resume-safe)
 
 set -e
 
@@ -21,7 +22,7 @@ echo "  FastHotStuff + Byzantine fork ($RUNS runs)"
 echo "  View timeout: $VIEW_TIMEOUT (fixed)"
 echo "============================================="
 
-for N in $(seq 5 5 50); do
+for N in $(seq 5 5 40); do
     F=$(( (N - 1) / 3 ))
 
     BYZ_IDS=""
@@ -37,10 +38,8 @@ for N in $(seq 5 5 50); do
         DURATION="60s"
     elif [ $N -le 20 ]; then
         DURATION="90s"
-    elif [ $N -le 35 ]; then
-        DURATION="120s"
     else
-        DURATION="180s"
+        DURATION="120s"
     fi
 
     CUE_FILE="$OUTDIR/N${N}.cue"
@@ -62,6 +61,13 @@ CUEEOF
 
     for R in $(seq 1 $RUNS); do
         RUN_DIR="$OUTDIR/N${N}/run${R}"
+        MFILE="$RUN_DIR/local/measurements.json"
+
+        if [ -f "$MFILE" ]; then
+            echo "[skip] N=$N f=$F run=$R (already done)"
+            continue
+        fi
+
         rm -rf "$RUN_DIR"
         echo "--- N=$N f=$F run=$R/$RUNS duration=$DURATION ---"
 
@@ -89,7 +95,7 @@ import json, math, os, statistics
 RUNS = $RUNS
 results = []
 
-for N in list(range(5, 51, 5)):
+for N in list(range(5, 41, 5)):
     f = (N - 1) // 3
     run_lats = []
     run_thrs = []

@@ -1,6 +1,7 @@
 #!/bin/bash
 # Experiment 1: Block finalization time vs N
 # OFT vs FastHotStuff, multiple runs per N for averaging
+# Skips already completed runs (resume-safe)
 
 set -e
 
@@ -24,19 +25,24 @@ for CONSENSUS in oft fasthotstuff; do
     echo ""
     echo "=== Protocol: $CONSENSUS ==="
 
-    for N in $(seq 5 5 50); do
+    for N in $(seq 5 5 40); do
         if [ $N -le 10 ]; then
             DURATION="30s"
         elif [ $N -le 20 ]; then
             DURATION="60s"
-        elif [ $N -le 35 ]; then
-            DURATION="90s"
         else
-            DURATION="120s"
+            DURATION="90s"
         fi
 
         for R in $(seq 1 $RUNS); do
             RUN_DIR="$OUTDIR/${CONSENSUS}/N${N}/run${R}"
+            MFILE="$RUN_DIR/local/measurements.json"
+
+            if [ -f "$MFILE" ]; then
+                echo "[skip] $CONSENSUS N=$N run=$R (already done)"
+                continue
+            fi
+
             rm -rf "$RUN_DIR"
             echo "--- $CONSENSUS N=$N run=$R/$RUNS duration=$DURATION ---"
 
@@ -69,7 +75,7 @@ all_results = {}
 
 for consensus in ['oft', 'fasthotstuff']:
     results = []
-    for N in list(range(5, 51, 5)):
+    for N in list(range(5, 41, 5)):
         run_lats = []
         run_thrs = []
         for r in range(1, RUNS + 1):
