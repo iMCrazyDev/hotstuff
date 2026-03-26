@@ -5,7 +5,7 @@
 set -e
 
 BINARY="./hotstuff"
-OUTDIR="experiments/results/exp1"
+OUTDIR="experiments/results/exp1/timeout_${VIEW_TIMEOUT}"
 BATCH_SIZE=1
 MAX_CONCURRENT=100
 CLIENTS=4
