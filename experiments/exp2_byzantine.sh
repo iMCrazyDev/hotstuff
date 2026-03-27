@@ -104,8 +104,12 @@ for N in list(range(5, 26, 5)):
         path = os.path.join('$OUTDIR', f'N{N}', f'run{r}', 'local', 'measurements.json')
         if not os.path.exists(path):
             continue
-        with open(path) as f_in:
-            data = json.load(f_in)
+        try:
+            with open(path) as f_in:
+                data = json.load(f_in)
+        except json.JSONDecodeError:
+            print(f'WARN: skipping corrupt {path}')
+            continue
 
         total_lat = 0.0
         total_count = 0

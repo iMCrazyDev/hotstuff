@@ -82,8 +82,12 @@ for consensus in ['oft', 'fasthotstuff']:
             path = os.path.join('$OUTDIR', consensus, f'N{N}', f'run{r}', 'local', 'measurements.json')
             if not os.path.exists(path):
                 continue
-            with open(path) as f:
-                data = json.load(f)
+            try:
+                with open(path) as f:
+                    data = json.load(f)
+            except json.JSONDecodeError:
+                print(f'WARN: skipping corrupt {path}')
+                continue
 
             total_lat = 0.0
             total_count = 0
