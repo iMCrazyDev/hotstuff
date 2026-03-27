@@ -22,7 +22,7 @@ echo "  FastHotStuff + Byzantine fork ($RUNS runs)"
 echo "  View timeout: $VIEW_TIMEOUT (fixed)"
 echo "============================================="
 
-for N in $(seq 5 5 30); do
+for N in $(seq 5 5 25); do
     F=$(( (N - 1) / 3 ))
 
     BYZ_IDS=""
@@ -95,7 +95,7 @@ import json, math, os, statistics
 RUNS = $RUNS
 results = []
 
-for N in list(range(5, 31, 5)):
+for N in list(range(5, 26, 5)):
     f = (N - 1) // 3
     run_lats = []
     run_thrs = []
