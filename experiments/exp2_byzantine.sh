@@ -1,6 +1,7 @@
 #!/bin/bash
 # Experiment 2: Block finalization time vs N with Byzantine fork-attackers
-# FastHotStuff only, f = floor((N-1)/3) faulty nodes, multiple runs
+# FastHotStuff only, N=3f+1, Byzantine nodes spread every 3rd replica
+# Iterates by f, not N
 # Skips already completed runs (resume-safe)
 
 set -e
@@ -13,34 +14,38 @@ MAX_CONCURRENT=100
 CLIENTS=4
 MEASUREMENT_INTERVAL="1s"
 RUNS=3
+DURATION="600s"
 
 mkdir -p "$OUTDIR"
 
 echo "============================================="
 echo "  Experiment 2: Finalization Time vs N"
 echo "  FastHotStuff + Byzantine fork ($RUNS runs)"
+echo "  N = 3f+1, Byzantine every 3rd replica"
 echo "  View timeout: $VIEW_TIMEOUT (fixed)"
+echo "  Duration: $DURATION per run"
 echo "============================================="
 
-for N in $(seq 5 5 25); do
-    F=$(( (N - 1) / 3 ))
+for F in 1 2 3 4 5 6 7 8; do
+    N=$(( 3 * F + 1 ))
 
+    # Byzantine replicas: every 3rd starting from 3 (i.e. 3, 6, 9, ...)
     BYZ_IDS=""
-    for i in $(seq $((N - F + 1)) $N); do
+    COUNT=0
+    for i in $(seq 3 3 $N); do
+        if [ $COUNT -ge $F ]; then
+            break
+        fi
         if [ -z "$BYZ_IDS" ]; then
             BYZ_IDS="$i"
         else
             BYZ_IDS="$BYZ_IDS, $i"
         fi
+        COUNT=$((COUNT + 1))
     done
 
-    if [ $N -le 10 ]; then
-        DURATION="60s"
-    elif [ $N -le 20 ]; then
-        DURATION="90s"
-    else
-        DURATION="120s"
-    fi
+    echo ""
+    echo "--- f=$F N=$N byzantine IDs: [$BYZ_IDS] ---"
 
     CUE_FILE="$OUTDIR/N${N}.cue"
     cat > "$CUE_FILE" <<CUEEOF
@@ -64,12 +69,12 @@ CUEEOF
         MFILE="$RUN_DIR/local/measurements.json"
 
         if [ -f "$MFILE" ]; then
-            echo "[skip] N=$N f=$F run=$R (already done)"
+            echo "[skip] f=$F N=$N run=$R (already done)"
             continue
         fi
 
         rm -rf "$RUN_DIR"
-        echo "--- N=$N f=$F run=$R/$RUNS duration=$DURATION ---"
+        echo "--- f=$F N=$N run=$R/$RUNS duration=$DURATION ---"
 
         $BINARY run \
             --cue "$CUE_FILE" \
@@ -95,8 +100,8 @@ import json, math, os, statistics
 RUNS = $RUNS
 results = []
 
-for N in list(range(5, 26, 5)):
-    f = (N - 1) // 3
+for f in range(1, 9):
+    N = 3 * f + 1
     run_lats = []
     run_thrs = []
 
@@ -158,7 +163,9 @@ summary = {
     'experiment': 'exp2_byzantine_finalization_time_vs_N',
     'consensus': '$CONSENSUS',
     'byzantine_strategy': 'fork',
+    'byzantine_placement': 'every_3rd_replica',
     'runs_per_config': RUNS,
+    'duration': '$DURATION',
     'view_timeout': '$VIEW_TIMEOUT',
     'batch_size': $BATCH_SIZE,
     'clients': $CLIENTS,
