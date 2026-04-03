@@ -26,7 +26,7 @@ echo "  View timeout: $VIEW_TIMEOUT (fixed)"
 echo "  Duration: $DURATION per run"
 echo "============================================="
 
-for F in 1 2 3 4 5; do
+for F in 1 2 3 4; do
     N=$(( 3 * F + 1 ))
 
     # Byzantine replicas: evenly spaced by step=N/f so ~every 3rd leader is faulty
@@ -99,7 +99,7 @@ import json, math, os, statistics
 RUNS = $RUNS
 results = []
 
-for f in range(1, 6):
+for f in range(1, 5):
     N = 3 * f + 1
     run_lats = []
     run_thrs = []
