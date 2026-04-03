@@ -14,7 +14,7 @@ MAX_CONCURRENT=100
 CLIENTS=4
 MEASUREMENT_INTERVAL="1s"
 RUNS=3
-DURATION="240s"
+DURATION="180s"
 
 mkdir -p "$OUTDIR"
 
@@ -26,7 +26,7 @@ echo "  View timeout: $VIEW_TIMEOUT (fixed)"
 echo "  Duration: $DURATION per run"
 echo "============================================="
 
-for F in 1 2 3 4; do
+for F in 1 2 3 4 5; do
     N=$(( 3 * F + 1 ))
 
     # Byzantine replicas: every 3rd starting from 3 (i.e. 3, 6, 9, ...)
@@ -100,7 +100,7 @@ import json, math, os, statistics
 RUNS = $RUNS
 results = []
 
-for f in range(1, 5):
+for f in range(1, 6):
     N = 3 * f + 1
     run_lats = []
     run_thrs = []
