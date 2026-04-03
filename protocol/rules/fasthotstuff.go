@@ -53,7 +53,7 @@ func (fhs *FastHotStuff) CommitRule(block *hotstuff.Block) *hotstuff.Block {
 	if !ok {
 		return nil
 	}
-	if block.Parent() == parent.Hash() && block.View() == parent.View()+1 &&
+	if block.Parent() == parent.Hash() && block.View() > parent.View() &&
 		parent.Parent() == grandparent.Hash() && parent.View() == grandparent.View()+1 {
 		fhs.logger.Debug("COMMIT: ", grandparent)
 		return grandparent

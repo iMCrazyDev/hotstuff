@@ -1,6 +1,6 @@
 #!/bin/bash
 # Experiment 2: Block finalization time vs N with Byzantine fork-attackers
-# FastHotStuff only, N=3f+1, Byzantine nodes spread every 3rd replica
+# FastHotStuff only, N=3f+1, Byzantine IDs evenly spaced in leader rotation
 # Iterates by f, not N
 # Skips already completed runs (resume-safe)
 
@@ -21,7 +21,7 @@ mkdir -p "$OUTDIR"
 echo "============================================="
 echo "  Experiment 2: Finalization Time vs N"
 echo "  FastHotStuff + Byzantine fork ($RUNS runs)"
-echo "  N = 3f+1, Byzantine every 3rd replica"
+echo "  N = 3f+1, Byzantine evenly spaced (step=N/f)"
 echo "  View timeout: $VIEW_TIMEOUT (fixed)"
 echo "  Duration: $DURATION per run"
 echo "============================================="
@@ -29,19 +29,18 @@ echo "============================================="
 for F in 1 2 3 4 5; do
     N=$(( 3 * F + 1 ))
 
-    # Byzantine replicas: every 3rd starting from 3 (i.e. 3, 6, 9, ...)
+    # Byzantine replicas: evenly spaced by step=N/f so ~every 3rd leader is faulty
+    # Leader rotation is round-robin: leader(v) = (v % N) + 1
+    # IDs 1, 1+step, 1+2*step, ... give gaps of ~3 views between Byzantine leaders
+    STEP=$((N / F))
     BYZ_IDS=""
-    COUNT=0
-    for i in $(seq 3 3 $N); do
-        if [ $COUNT -ge $F ]; then
-            break
-        fi
+    for k in $(seq 0 $((F - 1))); do
+        ID=$((k * STEP + 1))
         if [ -z "$BYZ_IDS" ]; then
-            BYZ_IDS="$i"
+            BYZ_IDS="$ID"
         else
-            BYZ_IDS="$BYZ_IDS, $i"
+            BYZ_IDS="$BYZ_IDS, $ID"
         fi
-        COUNT=$((COUNT + 1))
     done
 
     echo ""
@@ -163,7 +162,7 @@ summary = {
     'experiment': 'exp2_byzantine_finalization_time_vs_N',
     'consensus': '$CONSENSUS',
     'byzantine_strategy': 'fork',
-    'byzantine_placement': 'every_3rd_replica',
+    'byzantine_placement': 'evenly_spaced_step_N_div_f',
     'runs_per_config': RUNS,
     'duration': '$DURATION',
     'view_timeout': '$VIEW_TIMEOUT',
