@@ -1,0 +1,1 @@
+{"runtime": "gramine-direct", "protocol": "fasthotstuff", "n": 10, "run": 2, "duration": "30s", "exit_code": 0, "wall_seconds": 41, "summary": {"consensus_latency_ms": 6.235311418322043, "consensus_latency_count": 152483, "client_latency_ms": 498.16422560857944, "client_latency_count": 24268, "throughput_bps": 381.0301790330081, "replicas_reporting": 10}}

@@ -1,0 +1,1 @@
+{"runtime": "ego-sgx", "protocol": "oft", "n": 40, "run": 3, "duration": "90s", "exit_code": 0, "wall_seconds": 122, "summary": {"consensus_latency_ms": 18.803525662966848, "consensus_latency_count": 308213, "client_latency_ms": 499.9301406548742, "client_latency_count": 73069, "throughput_bps": 76.24987382484998, "replicas_reporting": 40}}

@@ -1,0 +1,1 @@
+{"runtime": "gramine-direct", "protocol": "oft", "n": 15, "run": 2, "duration": "60s", "exit_code": 0, "wall_seconds": 71, "summary": {"consensus_latency_ms": 2.967581595056245, "consensus_latency_count": 480121, "client_latency_ms": 498.9712358453461, "client_latency_count": 48780, "throughput_bps": 457.08068742259854, "replicas_reporting": 15}}

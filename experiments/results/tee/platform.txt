@@ -1,0 +1,115 @@
+### date
+2026-10-15T14:38:23Z
+### lscpu
+Architecture:                            x86_64
+CPU op-mode(s):                          32-bit, 64-bit
+Address sizes:                           46 bits physical, 57 bits virtual
+Byte Order:                              Little Endian
+CPU(s):                                  16
+On-line CPU(s) list:                     0-15
+Vendor ID:                               GenuineIntel
+BIOS Vendor ID:                          Alibaba Cloud
+Model name:                              Intel(R) Xeon(R) Platinum 8369B CPU @ 2.70GHz
+BIOS Model name:                         pc-i440fx-2.1  CPU @ 0.0GHz
+BIOS CPU family:                         1
+CPU family:                              6
+Model:                                   106
+Thread(s) per core:                      2
+Core(s) per socket:                      8
+Socket(s):                               1
+Stepping:                                6
+BogoMIPS:                                5399.99
+Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ss ht syscall nx pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid aperfmperf tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm abm 3dnowprefetch cpuid_fault ibrs_enhanced fsgsbase tsc_adjust sgx bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves wbnoinvd arat avx512vbmi pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid sgx_lc fsrm arch_capabilities
+Hypervisor vendor:                       KVM
+Virtualization type:                     full
+L1d cache:                               384 KiB (8 instances)
+L1i cache:                               256 KiB (8 instances)
+L2 cache:                                10 MiB (8 instances)
+L3 cache:                                48 MiB (1 instance)
+NUMA node(s):                            1
+NUMA node0 CPU(s):                       0-15
+Vulnerability Gather data sampling:      Unknown: Dependent on hypervisor status
+Vulnerability Indirect target selection: Mitigation; Aligned branch/return thunks
+Vulnerability Itlb multihit:             Not affected
+Vulnerability L1tf:                      Not affected
+Vulnerability Mds:                       Not affected
+Vulnerability Meltdown:                  Not affected
+Vulnerability Mmio stale data:           Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown
+Vulnerability Reg file data sampling:    Not affected
+Vulnerability Retbleed:                  Not affected
+Vulnerability Spec rstack overflow:      Not affected
+Vulnerability Spec store bypass:         Vulnerable
+Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+Vulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; PBRSB-eIBRS SW sequence; BHI SW loop, KVM SW loop
+Vulnerability Srbds:                     Not affected
+Vulnerability Tsa:                       Not affected
+Vulnerability Tsx async abort:           Not affected
+Vulnerability Vmscape:                   Not affected
+### cpu flags
+avx512f
+constant_tsc
+nonstop_tsc
+sgx
+sgx_lc
+tsc_known_freq
+### is-sgx-available
+SGX supported by CPU: true
+SGX1 (ECREATE, EENTER, ...): true
+SGX2 (EAUG, EACCEPT, EMODPR, ...): true
+Flexible Launch Control (IA32_SGXPUBKEYHASH{0..3} MSRs): true
+SGX extensions for virtualizers (EINCVIRTCHILD, EDECVIRTCHILD, ESETCONTEXT): false
+Extensions for concurrent memory management (ETRACKC, ELDBC, ELDUC, ERDINFO): false
+EDECCSSA instruction: false
+CET enclave attributes support (See Table 37-5 in the SDM): false
+Key separation and sharing (KSS) support (CONFIGID, CONFIGSVN, ISVEXTPRODID, ISVFAMILYID report fields): true
+AEX-Notify: false
+Max enclave size (32-bit): 0x80000000
+Max enclave size (64-bit): 0x100000000000000
+EPC size: 0x7c0000000
+SGX driver loaded: true
+AESMD installed: true
+SGX PSW/libsgx installed: true
+#PF/#GP information in EXINFO in MISC region of SSA supported: true
+#CP information in EXINFO in MISC region of SSA supported: false
+### sgx dmesg
+[    0.487747] sgx: EPC section 0x840000000-0xfffffffff
+[    0.555823] sgx: [Firmware Bug]: Unable to map EPC section to online node. Fallback to the NUMA node 0.
+### memory
+               total        used        free      shared  buff/cache   available
+Mem:              30           1          26           0           3          28
+Swap:              0           0           0
+### kernel
+Linux iZj6cg2znrswwd8onje0wcZ 6.8.0-139-generic #139-Ubuntu SMP PREEMPT_DYNAMIC Sat Aug  1 03:52:05 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+### os
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+NAME="Ubuntu"
+VERSION_ID="24.04"
+VERSION="24.04.5 LTS (Noble Numbat)"
+VERSION_CODENAME=noble
+ID=ubuntu
+ID_LIKE=debian
+HOME_URL="https://www.ubuntu.com/"
+SUPPORT_URL="https://help.ubuntu.com/"
+BUG_REPORT_URL="https://bugs.launchpad.net/ubuntu/"
+PRIVACY_POLICY_URL="https://www.ubuntu.com/legal/terms-and-policies/privacy-policy"
+UBUNTU_CODENAME=noble
+LOGO=ubuntu-logo
+### azure
+vmSize= location=
+### aliyun
+instanceType=ecs.g7t.4xlarge region=cn-hongkong zone=cn-hongkong-d
+### versions
+go=go version go1.25.6 linux/amd64
+gramine=1.9
+ego=1.10.0
+sgx_sdk=sgx_linux_x64_sdk_2.30.101.1.bin
+libsgx-enclave-common=2.30.101.1-noble1
+libsgx-dcap-ql=1.27.101.1-noble1
+libsgx-dcap-quote-verify=1.27.101.1-noble1
+sgx-aesm-service=2.30.101.1-noble1
+### build variants
+sgx-exitless: edmm=true enclave_size=64G max_threads=64 rpc_threads=2 debug=false
+sgx: edmm=true enclave_size=64G max_threads=64 rpc_threads=0 debug=false
+heap=512MiB debug=false
+### worker GOMAXPROCS
+2

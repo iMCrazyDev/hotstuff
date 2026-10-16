@@ -1,0 +1,1 @@
+{"runtime": "gramine-sgx", "protocol": "fasthotstuff", "n": 25, "run": 2, "duration": "90s", "exit_code": 0, "wall_seconds": 218, "summary": {"consensus_latency_ms": 128.11215153604385, "consensus_latency_count": 49315, "client_latency_ms": 500.6027336302537, "client_latency_count": 73042, "throughput_bps": 16.849094136171164, "replicas_reporting": 25}}

@@ -1,0 +1,1 @@
+{"runtime": "ego-sgx", "protocol": "fasthotstuff", "n": 25, "run": 3, "duration": "90s", "exit_code": 0, "wall_seconds": 114, "summary": {"consensus_latency_ms": 29.49690242463838, "consensus_latency_count": 207473, "client_latency_ms": 500.37962185208204, "client_latency_count": 73054, "throughput_bps": 82.87302736477982, "replicas_reporting": 25}}

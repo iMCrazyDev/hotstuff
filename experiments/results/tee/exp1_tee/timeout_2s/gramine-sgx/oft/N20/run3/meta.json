@@ -1,0 +1,1 @@
+{"runtime": "gramine-sgx", "protocol": "oft", "n": 20, "run": 3, "duration": "60s", "exit_code": 0, "wall_seconds": 161, "summary": {"consensus_latency_ms": 22.658541303999538, "consensus_latency_count": 93635, "client_latency_ms": 500.1944806997631, "client_latency_count": 48585, "throughput_bps": 63.64146417855527, "replicas_reporting": 20}}

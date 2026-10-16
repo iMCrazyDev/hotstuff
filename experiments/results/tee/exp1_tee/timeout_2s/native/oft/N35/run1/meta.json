@@ -1,0 +1,1 @@
+{"runtime": "native", "protocol": "oft", "n": 35, "run": 1, "duration": "90s", "exit_code": 0, "wall_seconds": 101, "summary": {"consensus_latency_ms": 5.52436012804636, "consensus_latency_count": 871083, "client_latency_ms": 499.6540150657951, "client_latency_count": 73136, "throughput_bps": 248.76101543282016, "replicas_reporting": 35}}

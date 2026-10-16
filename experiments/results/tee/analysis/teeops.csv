@@ -1,0 +1,48 @@
+operation,variant,runtime,p50_us,p99_us,mean_us
+Enclave entry + exit: empty ECALL,ecall_empty,sgx-sdk-hw,5.051,9.918,5.155
+Enclave exit + entry: empty OCALL,ocall_empty,sgx-sdk-hw,4.419,4.453,4.420
+ECALL with 4 KiB copied in,ecall_in_4096B,sgx-sdk-hw,5.625,11.056,5.746
+OCALL with 4 KiB copied out,ocall_in_4096B,sgx-sdk-hw,4.880,4.909,4.881
+Raw syscall: getppid,syscall_getppid,native,0.107,0.143,0.108
+Raw syscall: getppid,syscall_getppid,gramine-direct,1.450,1.550,1.461
+Raw syscall: getppid,syscall_getppid,gramine-sgx,13.920,14.510,13.949
+Raw syscall: getppid,syscall_getppid,ego-sgx,6.797,6.875,6.791
+Raw syscall: sched_yield,syscall_sched_yield,native,0.232,0.272,0.234
+Raw syscall: sched_yield,syscall_sched_yield,gramine-direct,1.780,1.900,1.788
+Raw syscall: sched_yield,syscall_sched_yield,gramine-sgx,19.390,20.010,19.433
+Raw syscall: sched_yield,syscall_sched_yield,ego-sgx,0.062,0.065,0.062
+"Host syscall: UDP send, 64 B",udp_send_64B,native,1.563,1.658,1.573
+"Host syscall: UDP send, 64 B",udp_send_64B,gramine-direct,3.620,3.740,3.622
+"Host syscall: UDP send, 64 B",udp_send_64B,gramine-sgx,25.590,29.040,25.773
+"Host syscall: UDP send, 64 B",udp_send_64B,ego-sgx,11.250,11.250,11.185
+"TCP loopback round trip, 64 B",tcp_rtt_64B,native,7.403,11.915,7.513
+"TCP loopback round trip, 64 B",tcp_rtt_64B,gramine-direct,25.000,31.000,25.044
+"TCP loopback round trip, 64 B",tcp_rtt_64B,gramine-sgx,138.000,205.000,144.176
+"TCP loopback round trip, 64 B",tcp_rtt_64B,ego-sgx,70.313,71.289,70.345
+ECDSA P-256 sign,ecdsa_p256_sign,native,35.608,43.861,36.314
+ECDSA P-256 sign,ecdsa_p256_sign,gramine-direct,39.000,49.000,39.663
+ECDSA P-256 sign,ecdsa_p256_sign,gramine-sgx,78.000,103.000,78.168
+ECDSA P-256 sign,ecdsa_p256_sign,ego-sgx,40.039,40.528,40.179
+ECDSA P-256 verify,ecdsa_p256_verify,native,79.425,88.795,80.277
+ECDSA P-256 verify,ecdsa_p256_verify,gramine-direct,80.000,88.000,80.602
+ECDSA P-256 verify,ecdsa_p256_verify,gramine-sgx,90.000,106.000,92.422
+ECDSA P-256 verify,ecdsa_p256_verify,ego-sgx,84.961,84.961,84.571
+Report generation: sgx_create_report,report_create,sgx-sdk-hw,5.178,5.212,5.179
+Report generation: sgx_create_report,report_create_ecall,sgx-sdk-hw,11.801,21.385,12.079
+Report generation: sgx_create_report,report,gramine-sgx,531.000,597.000,534.825
+Report generation: sgx_create_report,report,ego-sgx,7.690,7.813,7.720
+Report verification: sgx_verify_report,report_verify,sgx-sdk-hw,7.804,7.885,7.804
+Report verification: sgx_verify_report,report_verify,ego-sgx,16.846,17.578,16.952
+Quote generation (DCAP),quote_generate,sgx-sdk-hw,7345.206,7417.502,7344.109
+Quote generation (DCAP),quote,gramine-sgx,4103.000,4199.000,4117.277
+Quote generation (DCAP),quote,ego-sgx,4187.519,4250.019,4195.019
+Quote verification (DCAP QVL),quote_verify_collateral,sgx-sdk-hw,14478.131,14572.476,14482.508
+Quote verification (DCAP QVL),quote_verify,sgx-sdk-hw,15494.703,15599.865,15492.902
+Quote verification (DCAP QVL),quote_verify,ego-sgx,18250.083,18500.085,18270.917
+Quote verification (DCAP QVL),quote_verify_first,sgx-sdk-hw,572375.637,572375.637,572375.637
+Quote verification (DCAP QVL),qvl_quote_verify_collateral,gramine-sgx,14415.893,14559.235,14416.846
+Quote verification (DCAP QVL),qvl_quote_verify_collateral,ego-sgx,14371.909,14489.326,14373.562
+Enclave start-up (process start to exit),startup,native,2805.071,2921.075,2831.104
+Enclave start-up (process start to exit),startup,gramine-direct,82725.993,83426.655,82919.838
+Enclave start-up (process start to exit),startup,gramine-sgx,44353030.973,47746006.717,44873586.971
+Enclave start-up (process start to exit),startup,ego-sgx,4098629.785,4110059.237,4100389.406

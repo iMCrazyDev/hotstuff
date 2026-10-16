@@ -1,0 +1,33 @@
+{
+  "cpu_model": "Intel(R) Xeon(R) Platinum 8369B CPU @ 2.70GHz",
+  "vcpus": "16",
+  "threads_per_core": "2",
+  "hypervisor": "KVM",
+  "memory_gib": "30",
+  "sgx1": "true",
+  "sgx2": "true",
+  "flc": "true",
+  "epc_size_bytes": 33285996544,
+  "kernel": "6.8.0-139-generic",
+  "os": "Ubuntu 24.04.5 LTS",
+  "azure_vm_size": "",
+  "azure_location": "",
+  "aliyun_instance_type": "ecs.g7t.4xlarge",
+  "aliyun_region": "cn-hongkong",
+  "versions": {
+    "go": "go version go1.25.6 linux/amd64",
+    "gramine": "1.9",
+    "ego": "1.10.0",
+    "sgx_sdk": "sgx_linux_x64_sdk_2.30.101.1.bin",
+    "libsgx-enclave-common": "2.30.101.1-noble1",
+    "libsgx-dcap-ql": "1.27.101.1-noble1",
+    "libsgx-dcap-quote-verify": "1.27.101.1-noble1",
+    "sgx-aesm-service": "2.30.101.1-noble1"
+  },
+  "build_variants": [
+    "sgx-exitless: edmm=true enclave_size=64G max_threads=64 rpc_threads=2 debug=false",
+    "sgx: edmm=true enclave_size=64G max_threads=64 rpc_threads=0 debug=false",
+    "heap=512MiB debug=false"
+  ],
+  "worker_gomaxprocs": "2"
+}

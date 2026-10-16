@@ -1,0 +1,1 @@
+{"runtime": "inproc", "protocol": "oft", "n": 10, "run": 1, "duration": "30s", "exit_code": 0, "wall_seconds": 40, "summary": {"consensus_latency_ms": 1.0273515056388198, "consensus_latency_count": 418350, "client_latency_ms": 294.3173143534804, "client_latency_count": 41346, "throughput_bps": 1029.4689615780603, "replicas_reporting": 10}}

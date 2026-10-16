@@ -1,0 +1,1 @@
+{"runtime": "inproc", "protocol": "fasthotstuff", "n": 30, "run": 3, "duration": "90s", "exit_code": 0, "wall_seconds": 103, "summary": {"consensus_latency_ms": 21.384880547666548, "consensus_latency_count": 366190, "client_latency_ms": 501.2675388624017, "client_latency_count": 72799, "throughput_bps": 121.6439177684455, "replicas_reporting": 30}}

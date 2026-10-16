@@ -1,0 +1,1 @@
+{"runtime": "native", "protocol": "fasthotstuff", "n": 15, "run": 3, "duration": "60s", "exit_code": 0, "wall_seconds": 70, "summary": {"consensus_latency_ms": 8.369407986017338, "consensus_latency_count": 307023, "client_latency_ms": 499.55803640305214, "client_latency_count": 48686, "throughput_bps": 292.2191486796728, "replicas_reporting": 15}}

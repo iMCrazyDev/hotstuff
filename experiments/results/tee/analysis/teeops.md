@@ -1,0 +1,23 @@
+| Operation | Variant | SGX SDK (C, hardware) | native process / replica | Gramine LibOS, no SGX | Gramine-SGX enclave / replica | EGo-SGX enclave / replica |
+|---|---|---|---|---|---|---|
+| Enclave entry + exit: empty ECALL | ecall_empty | 5.05 [9.92] | – | – | – | – |
+| Enclave exit + entry: empty OCALL | ocall_empty | 4.42 [4.45] | – | – | – | – |
+| ECALL with 4 KiB copied in | ecall_in_4096B | 5.62 [11.1] | – | – | – | – |
+| OCALL with 4 KiB copied out | ocall_in_4096B | 4.88 [4.91] | – | – | – | – |
+| Raw syscall: getppid | syscall_getppid | – | 0.11 [0.14] | 1.45 [1.55] | 13.9 [14.5] | 6.80 [6.88] |
+| Raw syscall: sched_yield | syscall_sched_yield | – | 0.23 [0.27] | 1.78 [1.90] | 19.4 [20.0] | 0.06 [0.06] |
+| Host syscall: UDP send, 64 B | udp_send_64B | – | 1.56 [1.66] | 3.62 [3.74] | 25.6 [29.0] | 11.3 [11.3] |
+| TCP loopback round trip, 64 B | tcp_rtt_64B | – | 7.40 [11.9] | 25.0 [31.0] | 138 [205] | 70.3 [71.3] |
+| ECDSA P-256 sign | ecdsa_p256_sign | – | 35.6 [43.9] | 39.0 [49.0] | 78.0 [103] | 40.0 [40.5] |
+| ECDSA P-256 verify | ecdsa_p256_verify | – | 79.4 [88.8] | 80.0 [88.0] | 90.0 [106] | 85.0 [85.0] |
+| Report generation: sgx_create_report | report_create | 5.18 [5.21] | – | – | – | – |
+| Report generation: sgx_create_report | report_create_ecall | 11.8 [21.4] | – | – | – | – |
+| Report generation: sgx_create_report | report | – | – | – | 531 [597] | 7.69 [7.81] |
+| Report verification: sgx_verify_report | report_verify | 7.80 [7.88] | – | – | – | 16.8 [17.6] |
+| Quote generation (DCAP) | quote_generate | 7,345 [7,418] | – | – | – | – |
+| Quote generation (DCAP) | quote | – | – | – | 4,103 [4,199] | 4,188 [4,250] |
+| Quote verification (DCAP QVL) | quote_verify_collateral | 14,478 [14,572] | – | – | – | – |
+| Quote verification (DCAP QVL) | quote_verify | 15,495 [15,600] | – | – | – | 18,250 [18,500] |
+| Quote verification (DCAP QVL) | quote_verify_first | 572,376 [572,376] | – | – | – | – |
+| Quote verification (DCAP QVL) | qvl_quote_verify_collateral | – | – | – | 14,416 [14,559] | 14,372 [14,489] |
+| Enclave start-up (process start to exit) | startup | – | 2,805 [2,921] | 82,726 [83,427] | 44,353,031 [47,746,007] | 4,098,630 [4,110,059] |
