@@ -1,0 +1,23 @@
+/* Interface of the microbenchmark enclave. */
+enclave {
+    include "sgx_report.h"
+
+    trusted {
+        public void ecall_empty(void);
+        public void ecall_in([in, size=len] const uint8_t* buf, size_t len);
+        public void ecall_out([out, size=len] uint8_t* buf, size_t len);
+        public void ecall_ocall_loop(uint64_t n);
+        public void ecall_ocall_in_loop(uint64_t n, size_t len);
+        public sgx_status_t ecall_self_target_info([out] sgx_target_info_t* target);
+        public sgx_status_t ecall_create_report([in] const sgx_target_info_t* target,
+                                                [in] const sgx_report_data_t* data,
+                                                [out] sgx_report_t* report);
+        public sgx_status_t ecall_create_report_loop(uint64_t n, [in] const sgx_target_info_t* target);
+        public sgx_status_t ecall_verify_report_loop(uint64_t n, [in] const sgx_report_t* report);
+    };
+
+    untrusted {
+        void ocall_empty(void);
+        void ocall_in([in, size=len] const uint8_t* buf, size_t len);
+    };
+};

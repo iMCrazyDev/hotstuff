@@ -1,0 +1,9 @@
+build/
+sgx-microbench/microbench
+sgx-microbench/*.so
+sgx-microbench/.mode
+sgx-microbench/App/Enclave_u.*
+sgx-microbench/Enclave/Enclave_t.*
+sgx-microbench/Enclave/Enclave.config.xml
+sgx-microbench/Enclave/private.pem
+scripts/__pycache__/

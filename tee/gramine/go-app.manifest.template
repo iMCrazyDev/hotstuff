@@ -1,0 +1,45 @@
+# Gramine manifest for a statically linked Go program: the hotstuff worker
+# (one replica per enclave) or teebench. Rendered by tee/gramine/build.sh.
+
+libos.entrypoint = "/app"
+loader.entrypoint.uri = "file:{{ gramine.libos }}"
+loader.log_level = "{{ log_level }}"
+
+# Worker flags (data path, metrics) change between runs, so argv is taken from
+# the host. Argv carries no secrets; all replica state is created in the enclave.
+loader.insecure__use_cmdline_argv = true
+
+# The hotstuff CLI looks up the home directory at start-up.
+loader.env.HOME = "/tmp"
+loader.env.GOMAXPROCS = { passthrough = true }
+loader.env.GODEBUG = { passthrough = true }
+loader.env.GOGC = { passthrough = true }
+
+fs.mounts = [
+  { path = "/app", uri = "file:{{ binary }}" },
+  { path = "/lib", uri = "file:{{ gramine.runtimedir() }}" },
+  { path = "{{ data_dir }}", uri = "file:{{ data_dir }}" },
+  { type = "tmpfs", path = "/tmp" },
+]
+
+sys.stack.size = "{{ stack_size }}"
+
+sgx.debug = {{ debug }}
+sgx.edmm_enable = {{ edmm }}
+sgx.enclave_size = "{{ enclave_size }}"
+sgx.max_threads = {{ max_threads }}
+sgx.insecure__rpc_thread_num = {{ rpc_threads }}
+sgx.remote_attestation = "{{ remote_attestation }}"
+sgx.isvprodid = 1
+sgx.isvsvn = 1
+
+sgx.trusted_files = [
+  "file:{{ gramine.libos }}",
+  "file:{{ gramine.runtimedir() }}/",
+  "file:{{ binary }}",
+]
+
+# Measurements and quotes written by the programs (untrusted output).
+sgx.allowed_files = [
+  "file:{{ data_dir }}/",
+]
