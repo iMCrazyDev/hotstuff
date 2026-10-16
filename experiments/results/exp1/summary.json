@@ -1,0 +1,106 @@
+{
+  "experiment": "exp1_finalization_time_vs_N",
+  "protocols": [
+    "oft",
+    "fasthotstuff"
+  ],
+  "batch_size": 1,
+  "clients": 2,
+  "max_concurrent": 50,
+  "results": {
+    "oft": [
+      {
+        "N": 4,
+        "target_K": 400,
+        "avg_latency_ms": 1.2012,
+        "std_dev_ms": 0.5131,
+        "unique_blocks": 12390,
+        "total_samples": 49560,
+        "avg_throughput_bps": 272.76
+      },
+      {
+        "N": 7,
+        "target_K": 700,
+        "avg_latency_ms": 1.9669,
+        "std_dev_ms": 0.7733,
+        "unique_blocks": 7370,
+        "total_samples": 51590,
+        "avg_throughput_bps": 179.41
+      },
+      {
+        "N": 10,
+        "target_K": 1000,
+        "avg_latency_ms": 2.936,
+        "std_dev_ms": 1.2547,
+        "unique_blocks": 9994,
+        "total_samples": 99940,
+        "avg_throughput_bps": 206.66
+      },
+      {
+        "N": 13,
+        "target_K": 1300,
+        "avg_latency_ms": 3.9909,
+        "std_dev_ms": 9.6453,
+        "unique_blocks": 10771,
+        "total_samples": 140023,
+        "avg_throughput_bps": 186.68
+      },
+      {
+        "N": 16,
+        "target_K": 1600,
+        "avg_latency_ms": 4.765,
+        "std_dev_ms": 2.0161,
+        "unique_blocks": 9218,
+        "total_samples": 147488,
+        "avg_throughput_bps": 159.14
+      }
+    ],
+    "fasthotstuff": [
+      {
+        "N": 4,
+        "target_K": 400,
+        "avg_latency_ms": 3.3218,
+        "std_dev_ms": 10.4918,
+        "unique_blocks": 7218,
+        "total_samples": 28872,
+        "avg_throughput_bps": 158.32
+      },
+      {
+        "N": 7,
+        "target_K": 700,
+        "avg_latency_ms": 7.1739,
+        "std_dev_ms": 16.5846,
+        "unique_blocks": 3495,
+        "total_samples": 24465,
+        "avg_throughput_bps": 84.44
+      },
+      {
+        "N": 10,
+        "target_K": 1000,
+        "avg_latency_ms": 11.3799,
+        "std_dev_ms": 2.4565,
+        "unique_blocks": 4518,
+        "total_samples": 45180,
+        "avg_throughput_bps": 90.66
+      },
+      {
+        "N": 13,
+        "target_K": 1300,
+        "avg_latency_ms": 17.6534,
+        "std_dev_ms": 20.3317,
+        "unique_blocks": 6305,
+        "total_samples": 81965,
+        "avg_throughput_bps": 112.65
+      },
+      {
+        "N": 16,
+        "target_K": 1600,
+        "avg_latency_ms": 24.2921,
+        "std_dev_ms": 18.2032,
+        "unique_blocks": 5730,
+        "total_samples": 91681,
+        "avg_throughput_bps": 103.99
+      }
+    ]
+  }
+}

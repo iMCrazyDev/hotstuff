@@ -1,0 +1,55 @@
+{
+  "experiment": "exp2_byzantine_finalization_time_vs_N",
+  "consensus": "fasthotstuff",
+  "byzantine_strategy": "fork",
+  "batch_size": 1,
+  "clients": 2,
+  "max_concurrent": 50,
+  "results": [
+    {
+      "N": 4,
+      "f_byzantine": 1,
+      "avg_latency_ms": 400.4242,
+      "std_dev_ms": 667.5881,
+      "unique_blocks": 153,
+      "total_samples": 612,
+      "avg_throughput_bps": 4.78
+    },
+    {
+      "N": 7,
+      "f_byzantine": 2,
+      "avg_latency_ms": 440.7469,
+      "std_dev_ms": 1083.8623,
+      "unique_blocks": 117,
+      "total_samples": 819,
+      "avg_throughput_bps": 3.65
+    },
+    {
+      "N": 10,
+      "f_byzantine": 3,
+      "avg_latency_ms": 766.9086,
+      "std_dev_ms": 2315.9081,
+      "unique_blocks": 116,
+      "total_samples": 1160,
+      "avg_throughput_bps": 2.47
+    },
+    {
+      "N": 13,
+      "f_byzantine": 4,
+      "avg_latency_ms": 927.7303,
+      "std_dev_ms": 3031.5905,
+      "unique_blocks": 114,
+      "total_samples": 1482,
+      "avg_throughput_bps": 1.84
+    },
+    {
+      "N": 16,
+      "f_byzantine": 5,
+      "avg_latency_ms": 879.2142,
+      "std_dev_ms": 3147.6035,
+      "unique_blocks": 107,
+      "total_samples": 1712,
+      "avg_throughput_bps": 1.72
+    }
+  ]
+}

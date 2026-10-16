@@ -1,0 +1,146 @@
+{
+  "experiment": "exp1_finalization_time_vs_N",
+  "protocols": [
+    "oft",
+    "fasthotstuff"
+  ],
+  "runs_per_config": 3,
+  "view_timeout": "2s",
+  "batch_size": 1,
+  "clients": 4,
+  "max_concurrent": 100,
+  "results": {
+    "oft": [
+      {
+        "N": 5,
+        "runs": 3,
+        "avg_latency_ms": 1.6575,
+        "std_dev_ms": 0.0232,
+        "avg_throughput_bps": 628.93,
+        "std_throughput_bps": 4.54
+      },
+      {
+        "N": 10,
+        "runs": 3,
+        "avg_latency_ms": 3.0565,
+        "std_dev_ms": 0.0493,
+        "avg_throughput_bps": 478.66,
+        "std_throughput_bps": 7.63
+      },
+      {
+        "N": 15,
+        "runs": 3,
+        "avg_latency_ms": 5.0636,
+        "std_dev_ms": 0.0677,
+        "avg_throughput_bps": 285.34,
+        "std_throughput_bps": 4.31
+      },
+      {
+        "N": 20,
+        "runs": 3,
+        "avg_latency_ms": 7.1937,
+        "std_dev_ms": 0.228,
+        "avg_throughput_bps": 202.29,
+        "std_throughput_bps": 6.66
+      },
+      {
+        "N": 25,
+        "runs": 3,
+        "avg_latency_ms": 8.9399,
+        "std_dev_ms": 0.3412,
+        "avg_throughput_bps": 161.8,
+        "std_throughput_bps": 5.94
+      },
+      {
+        "N": 30,
+        "runs": 3,
+        "avg_latency_ms": 11.309,
+        "std_dev_ms": 0.9641,
+        "avg_throughput_bps": 128.2,
+        "std_throughput_bps": 11.1
+      },
+      {
+        "N": 35,
+        "runs": 3,
+        "avg_latency_ms": 13.4533,
+        "std_dev_ms": 0.6825,
+        "avg_throughput_bps": 107.02,
+        "std_throughput_bps": 5.84
+      },
+      {
+        "N": 40,
+        "runs": 3,
+        "avg_latency_ms": 13.7836,
+        "std_dev_ms": 0.3627,
+        "avg_throughput_bps": 105.44,
+        "std_throughput_bps": 3.16
+      }
+    ],
+    "fasthotstuff": [
+      {
+        "N": 5,
+        "runs": 3,
+        "avg_latency_ms": 4.9096,
+        "std_dev_ms": 0.0873,
+        "avg_throughput_bps": 485.5,
+        "std_throughput_bps": 9.79
+      },
+      {
+        "N": 10,
+        "runs": 3,
+        "avg_latency_ms": 12.6239,
+        "std_dev_ms": 0.3416,
+        "avg_throughput_bps": 197.58,
+        "std_throughput_bps": 6.39
+      },
+      {
+        "N": 15,
+        "runs": 3,
+        "avg_latency_ms": 24.4519,
+        "std_dev_ms": 0.5683,
+        "avg_throughput_bps": 103.04,
+        "std_throughput_bps": 2.52
+      },
+      {
+        "N": 20,
+        "runs": 3,
+        "avg_latency_ms": 42.302,
+        "std_dev_ms": 1.1284,
+        "avg_throughput_bps": 59.41,
+        "std_throughput_bps": 1.65
+      },
+      {
+        "N": 25,
+        "runs": 3,
+        "avg_latency_ms": 61.668,
+        "std_dev_ms": 0.3714,
+        "avg_throughput_bps": 40.53,
+        "std_throughput_bps": 0.43
+      },
+      {
+        "N": 30,
+        "runs": 3,
+        "avg_latency_ms": 85.6952,
+        "std_dev_ms": 2.4798,
+        "avg_throughput_bps": 28.94,
+        "std_throughput_bps": 1.05
+      },
+      {
+        "N": 35,
+        "runs": 3,
+        "avg_latency_ms": 114.5108,
+        "std_dev_ms": 7.3185,
+        "avg_throughput_bps": 21.75,
+        "std_throughput_bps": 1.51
+      },
+      {
+        "N": 40,
+        "runs": 3,
+        "avg_latency_ms": 137.3604,
+        "std_dev_ms": 3.2309,
+        "avg_throughput_bps": 18.22,
+        "std_throughput_bps": 0.5
+      }
+    ]
+  }
+}
