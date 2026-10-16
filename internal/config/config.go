@@ -2,6 +2,7 @@
 package config
 
 import (
+	"fmt"
 	"slices"
 	"time"
 
@@ -125,6 +126,25 @@ type ExperimentConfig struct {
 	LogLevel string
 	// UseTLS enables TLS.
 	UseTLS bool
+
+	// # Local process deployment (e.g. one SGX enclave per replica):
+
+	// ReplicaProcs is the number of local worker processes that run the replicas.
+	// If zero, replicas run on ReplicaHosts as usual. Clients always run in the
+	// controller's local worker in this mode.
+	ReplicaProcs int
+	// WorkerCmd is the command used to start each local worker process,
+	// e.g. ["gramine-sgx", "hotstuff"]. Defaults to the hotstuff executable.
+	WorkerCmd []string
+	// WorkerDir is the working directory of the local worker processes.
+	WorkerDir string
+	// WorkerEnv holds extra KEY=VALUE environment variables for the local worker processes.
+	WorkerEnv []string
+	// WorkerStartTimeout bounds the start-up of the local worker processes.
+	WorkerStartTimeout time.Duration
+	// ProcDataDir is the directory where local worker processes write measurements.
+	// The path must be valid both inside and outside the TEE. Defaults to Output.
+	ProcDataDir string
 
 	// # Duration values are separated here for easily adding compatibility with Cue.
 	// NOTE: Cue does not support time.Duration and must be implemented manually.
@@ -259,6 +279,24 @@ func (c *ExperimentConfig) IsLocal() bool {
 	}
 	return c.ReplicaHosts[0] == "localhost" && c.ClientHosts[0] == "localhost" ||
 		c.ReplicaHosts[0] == "127.0.0.1" && c.ClientHosts[0] == "127.0.0.1"
+}
+
+// ProcHostNames returns the names of n local worker processes.
+func ProcHostNames(n int) []string {
+	names := make([]string, n)
+	for i := range names {
+		names[i] = fmt.Sprintf("proc%d", i+1)
+	}
+	return names
+}
+
+// HostAddress returns the network address used to reach the given host.
+// Local worker processes are reached via the loopback interface.
+func (c *ExperimentConfig) HostAddress(host string) string {
+	if c.ReplicaProcs > 0 && slices.Contains(c.ReplicaHosts, host) {
+		return "127.0.0.1"
+	}
+	return host
 }
 
 // AllHosts returns the list of all hostnames, including replicas and clients.

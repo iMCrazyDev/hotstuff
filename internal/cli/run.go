@@ -58,12 +58,21 @@ func runSingleExperiment(cfg *config.ExperimentConfig) {
 	// and when passed to iago.NewSSHGroup, thus iago will not generate
 	// an SSH group.
 	var hosts []string
-	if !cfg.IsLocal() {
+	if cfg.ReplicaProcs > 0 {
+		// replicas run in local worker processes and clients in the local worker;
+		// no ssh hosts are needed.
+	} else if !cfg.IsLocal() {
 		hosts = cfg.AllHosts()
 	}
 
-	g, err := iago.NewSSHGroup(hosts, cfg.SSHConfig)
-	checkf("failed to connect to remote hosts: %v", err)
+	// Only create an SSH group when there are remote hosts: NewSSHGroup reads
+	// the ssh config file, which does not exist on a fresh machine.
+	g := iago.NewGroup(nil)
+	var err error
+	if len(hosts) > 0 {
+		g, err = iago.NewSSHGroup(hosts, cfg.SSHConfig)
+		checkf("failed to connect to remote hosts: %v", err)
+	}
 
 	if cfg.Exe == "" {
 		cfg.Exe, err = os.Executable()
@@ -92,6 +101,31 @@ func runSingleExperiment(cfg *config.ExperimentConfig) {
 		go stderrPipe(session.Stderr(), errors)
 	}
 
+	var procs *orchestration.LocalProcs
+	if cfg.ReplicaProcs > 0 {
+		command := cfg.WorkerCmd
+		if len(command) == 0 {
+			command = []string{cfg.Exe}
+		}
+		procs, err = orchestration.StartLocalProcs(orchestration.LocalProcConfig{
+			DeployConfig: orchestration.DeployConfig{
+				LogLevel:            cfg.LogLevel,
+				Metrics:             cfg.Metrics,
+				MeasurementInterval: cfg.MeasurementInterval,
+			},
+			Names:        cfg.ReplicaHosts,
+			Command:      command,
+			Dir:          cfg.WorkerDir,
+			Env:          cfg.WorkerEnv,
+			DataDir:      cfg.ProcDataDir,
+			StartTimeout: cfg.WorkerStartTimeout,
+		})
+		checkf("failed to start local worker processes: %v", err)
+		for name, worker := range procs.Workers() {
+			remoteWorkers[name] = worker
+		}
+	}
+
 	if cfg.Worker || len(hosts) == 0 {
 		worker, wait := localWorker(cfg.Output, cfg.Metrics, cfg.MeasurementInterval)
 		defer wait()
@@ -115,6 +149,13 @@ func runSingleExperiment(cfg *config.ExperimentConfig) {
 	for range sessions {
 		err = <-errors
 		checkf("failed to read from remote's standard error stream %v", err)
+	}
+
+	if procs != nil {
+		err = procs.Close(time.Minute)
+		checkf("failed to stop local worker processes: %v", err)
+		err = procs.CollectData(cfg.Output)
+		checkf("failed to collect data from local worker processes: %v", err)
 	}
 
 	err = orchestration.FetchData(g, cfg.Output)
@@ -149,6 +190,9 @@ func localWorker(globalOutput string, enableMetrics []string, interval time.Dura
 	controllerPipe, workerPipe := net.Pipe()
 	c := make(chan struct{})
 	go func() {
+		// Deferred first so that it runs last: wait must not return before the
+		// measurements have been flushed and the output file closed.
+		defer close(c)
 		var logger metrics.Logger
 		if output != "" {
 			f, err := os.OpenFile(filepath.Join(output, "measurements.json"), os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0o644)
@@ -177,7 +221,6 @@ func localWorker(globalOutput string, enableMetrics []string, interval time.Dura
 		if err != nil {
 			log.Fatal(err)
 		}
-		close(c)
 	}()
 
 	wait = func() {

@@ -153,7 +153,7 @@ func (e *Experiment) createReplicas(replicaMap config.ReplicaMap) (cfg *orchestr
 		}
 
 		for id, replicaCfg := range wcfg.GetReplicas() {
-			replicaCfg.Address = host
+			replicaCfg.Address = e.cfg.HostAddress(host)
 			e.logger.Debugf("Replica %d: Address: %s, PublicKey: %t, ReplicaPort: %d, ClientPort: %d",
 				id, replicaCfg.Address, len(replicaCfg.PublicKey) > 0, replicaCfg.ReplicaPort, replicaCfg.ClientPort)
 			cfg.Replicas[id] = replicaCfg

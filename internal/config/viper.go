@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/relab/hotstuff/internal/tree"
 	"github.com/spf13/viper"
@@ -69,6 +70,12 @@ func NewViper() (*ExperimentConfig, error) {
 		ClientTimeout:       viper.GetDuration("client-timeout"),
 		UseAggQC:            viper.GetBool("agg-qc"),
 		UseTLS:              true,
+		ReplicaProcs:        viper.GetInt("replica-procs"),
+		WorkerCmd:           strings.Fields(viper.GetString("worker-cmd")),
+		WorkerDir:           viper.GetString("worker-dir"),
+		WorkerEnv:           viper.GetStringSlice("worker-env"),
+		ProcDataDir:         viper.GetString("proc-data-dir"),
+		WorkerStartTimeout:  viper.GetDuration("worker-start-timeout"),
 	}
 
 	if len(cfg.ReplicaHosts) == 0 {
@@ -76,6 +83,21 @@ func NewViper() (*ExperimentConfig, error) {
 	}
 	if len(cfg.ClientHosts) == 0 {
 		cfg.ClientHosts = []string{"localhost"}
+	}
+	if cfg.ReplicaProcs > 0 {
+		if len(viper.GetStringSlice("replica-hosts")) > 0 {
+			return nil, fmt.Errorf("--replica-procs cannot be combined with --replica-hosts")
+		}
+		if len(cfg.ClientHosts) != 1 || cfg.ClientHosts[0] != "localhost" {
+			return nil, fmt.Errorf("--replica-procs requires clients to run on localhost")
+		}
+		if cfg.ReplicaProcs > cfg.Replicas {
+			return nil, fmt.Errorf("--replica-procs (%d) exceeds --replicas (%d)", cfg.ReplicaProcs, cfg.Replicas)
+		}
+		cfg.ReplicaHosts = ProcHostNames(cfg.ReplicaProcs)
+		if cfg.ProcDataDir == "" {
+			cfg.ProcDataDir = cfg.Output
+		}
 	}
 	if len(cfg.TreePositions) == 0 {
 		cfg.TreePositions = tree.DefaultTreePosUint32(cfg.Replicas)

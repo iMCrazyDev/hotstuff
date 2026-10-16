@@ -2,7 +2,9 @@ package cli
 
 import (
 	"bufio"
+	"io"
 	"log"
+	"net"
 	"os"
 	"time"
 
@@ -23,6 +25,8 @@ var (
 
 	enableMetrics       []string
 	measurementInterval time.Duration
+	connectAddr         string
+	workerName          string
 )
 
 // workerCmd represents the worker command
@@ -57,6 +61,8 @@ func init() {
 
 	workerCmd.Flags().StringSliceVar(&enableMetrics, "metrics", nil, "the metrics to enable")
 	workerCmd.Flags().DurationVar(&measurementInterval, "measurement-interval", 0, "the interval between measurements")
+	workerCmd.Flags().StringVar(&connectAddr, "connect", "", "connect to the controller at this address instead of using stdin/stdout")
+	workerCmd.Flags().StringVar(&workerName, "name", "", "the name the worker announces when it connects to the controller")
 }
 
 func runWorker() {
@@ -83,7 +89,17 @@ func runWorker() {
 		}()
 	}
 
-	worker := orchestration.NewWorker(protostream.NewWriter(os.Stdout), protostream.NewReader(os.Stdin), metricsLogger, enableMetrics, measurementInterval)
+	var in io.Reader = os.Stdin
+	var out io.Writer = os.Stdout
+	if connectAddr != "" {
+		conn, err := net.Dial("tcp", connectAddr)
+		checkf("failed to connect to the controller: %v", err)
+		defer func() { _ = conn.Close() }()
+		_, err = io.WriteString(conn, workerName+"\n")
+		checkf("failed to send the worker name: %v", err)
+		in, out = conn, conn
+	}
+	worker := orchestration.NewWorker(protostream.NewWriter(out), protostream.NewReader(in), metricsLogger, enableMetrics, measurementInterval)
 	err = worker.Run()
 	if err != nil {
 		log.Println(err)

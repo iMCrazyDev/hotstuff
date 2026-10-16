@@ -53,6 +53,12 @@ func init() {
 	runCmd.Flags().StringSlice("client-hosts", nil, "the remote hosts to run clients on via ssh")
 	runCmd.Flags().String("exe", "", "path to the executable to deploy and run on remote workers")
 	runCmd.Flags().String("ssh-config", "", "path to ssh_config file to resolve host aliases (defaults to ~/.ssh/config)")
+	runCmd.Flags().Int("replica-procs", 0, "run the replicas in this many local worker processes (e.g. one enclave per replica)")
+	runCmd.Flags().String("worker-cmd", "", "command that starts a local worker process, e.g. \"gramine-sgx hotstuff\" (defaults to the hotstuff executable)")
+	runCmd.Flags().String("worker-dir", "", "working directory of the local worker processes")
+	runCmd.Flags().StringSlice("worker-env", nil, "extra KEY=VALUE environment variables for the local worker processes")
+	runCmd.Flags().Duration("worker-start-timeout", 10*time.Minute, "how long local worker processes may take to start (e.g. to create their enclaves)")
+	runCmd.Flags().String("proc-data-dir", "", "directory where local worker processes write measurements; must be the same path inside the TEE (defaults to --output)")
 
 	runCmd.Flags().String("output", "", "the directory to save data and profiles to (disabled by default)")
 	runCmd.Flags().Bool("cpu-profile", false, "enable cpu profiling")
